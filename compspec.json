@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "name": "decentralized combat",
+    "id": "combat_dc",
+    "version": "v1.0.0",
+    "repository": "https:\/\/github.com\/trendscenter\/combat-dc",
+    "description": "Decentralized ComBat test"
+  },
+  "computation": {
+    "type": "docker",
+    "dockerImage": "coinstac/combat",
+    "command": [
+      "python",
+      "\/computation\/local.py"
+    ],
+    "remote": {
+      "type": "docker",
+      "dockerImage": "coinstac/combat",
+      "command": [
+        "python",
+        "\/computation\/remote.py"
+      ]
+    },
+   "input": {
+      "index": {
+        "type": "number"
+      },
+      "url": {
+        "type": "string"
+      }
+
+    },
+    "output": {
+      "sum": {
+        "type": "number",
+        "label": "Decentralized Sum"
+      }
+    },
+    "display": {
+      "type": "table"
+    }
+  }
+}

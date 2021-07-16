@@ -1,0 +1,11 @@
+matplotlib
+nilearn
+numba
+scikit-learn==0.20.3
+statsmodels
+ujson
+fslparser==0.0.2
+numpy
+mat73
+pandas
+scipy
