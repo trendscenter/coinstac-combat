@@ -57,6 +57,11 @@ def local_2(args):
     _grand_mean = np.array(args["input"]["grand_mean"])
     _var_pooled = np.array(args["input"]["grand_variance"])
     info = combat.adjust_data(urls, _grand_mean, _var_pooled, _info_dict, 'batch', location)
+    harmonized_data = np.transpose(info['data'])
+    output_url = args["state"]["outputDirectory"] + "/"
+    np.savetxt(output_url + 'harmonized_site_'+ str(location) +'_data.csv', harmonized_data, delimiter=',')
+    np.savetxt(output_url + 'transposed_harmonized_site_'+ str(location) +'_data.csv', info['data'], delimiter=',')
+
     output_dict = {
         "computation_phase": "local_2",
         "a_prior": info['estimates']['a_prior'], 
