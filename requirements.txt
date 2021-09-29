@@ -9,3 +9,4 @@ numpy
 mat73
 pandas
 scipy
+coinstacparsers>=0.0.3

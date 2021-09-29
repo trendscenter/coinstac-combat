@@ -27,6 +27,13 @@
       },
       "url": {
         "type": "string"
+      },
+
+      "data": {
+        "label": "responses",
+        "type": "array",
+        "items": ["responses"],
+        "extensions": "csv"
       }
 
     },

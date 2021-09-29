@@ -6,8 +6,13 @@
     },
 
     "url":{
-      "value": "simulated_unharmonized_data.mat"
+      "value": ""
+    }, 
+
+    "data":{
+      "value": "X_file.csv"
     }
+
 
   },
 
@@ -18,44 +23,12 @@
       },
   
       "url":{
-        "value": "simulated_unharmonized_data.mat"
-      }
-  
-    },
-
-    {
-      "index":  
-        {
-          "value": 3
-        },
-    
-        "url":{
-          "value": "simulated_unharmonized_data.mat"
-        }
-    
+        "value": ""
       },
 
-      {
-        "index":  
-          {
-            "value": 4
-          },
-      
-          "url":{
-            "value": "simulated_unharmonized_data.mat"
-          }
-      
-        },
-
-        {
-          "index":  
-            {
-              "value": 5
-            },
-        
-            "url":{
-              "value": "simulated_unharmonized_data.mat"
-            }
-        
-          }
+      "data":{
+        "value": "X_file.csv"
+      }
+  
+    }
 ]

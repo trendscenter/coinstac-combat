@@ -5,6 +5,7 @@ import json
 import scipy.io
 import numpy as np
 import combat
+import csv
 
 def list_recursive(d, key):
     for k, v in d.items():
@@ -14,10 +15,25 @@ def list_recursive(d, key):
         if k == key:
             yield v
 
+def csv_parser(file_url):
+    with open(file_url, mode='r') as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        line_count = 0
+        for row in csv_reader:
+            if line_count == 0:
+                line_count += 1
+            else:
+                url = row[0]
+                index = int(row[1])
+                line_count += 1
+    return  url, index
+
 def local_0(args):
     input_list = args["input"]
-    index = input_list["index"]
-    urls = args["state"]["baseDirectory"] + "/" +  input_list["url"]
+    #index = input_list["index"]
+    datapath = args["state"]["baseDirectory"] + "/" +  input_list["data"]
+    url, index = csv_parser(datapath)
+    urls = args["state"]["baseDirectory"] + "/" +  url
     info = combat.send_sample_infomation(urls, index)
     output_dict = {"computation_phase": "local_0",  "value": info}
     cache_dict = {"url": urls, "location": index}
