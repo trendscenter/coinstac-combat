@@ -22,13 +22,6 @@
       ]
     },
    "input": {
-      "index": {
-        "type": "number"
-      },
-      "url": {
-        "type": "string"
-      },
-
       "data": {
         "label": "responses",
         "type": "array",
@@ -38,9 +31,9 @@
 
     },
     "output": {
-      "sum": {
-        "type": "number",
-        "label": "Decentralized Sum"
+      "hyperparameters": {
+        "type": "array",
+        "label": "Decentralized hypermeters"
       }
     },
     "display": {

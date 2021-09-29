@@ -1,31 +1,11 @@
 [
   {
-  "index":  
-    {
-      "value": 1 
-    },
-
-    "url":{
-      "value": ""
-    }, 
-
     "data":{
       "value": "X_file.csv"
     }
-
-
   },
 
   {
-    "index":  
-      {
-        "value": 2
-      },
-  
-      "url":{
-        "value": ""
-      },
-
       "data":{
         "value": "X_file.csv"
       }
