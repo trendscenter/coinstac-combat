@@ -32,7 +32,9 @@ def local_0(args):
     input_list = args["input"]
     #index = input_list["index"]
     datapath = args["state"]["baseDirectory"] + "/" +  input_list["data"]
-    url, index = csv_parser(datapath)
+    url = args["input"]["file_url"]
+    index = args["input"]["index"]
+    # url, index = csv_parser(datapath)
     urls = args["state"]["baseDirectory"] + "/" +  url
     info = combat.send_sample_infomation(urls, index)
     output_dict = {"computation_phase": "local_0",  "value": info}
