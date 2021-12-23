@@ -1,2 +1,2 @@
-﻿file_url,index
-"simulated_unharmonized_data.mat",1
+﻿data_url,index,covar_info
+"mn_data.mat",1,"nm_covar.mat"

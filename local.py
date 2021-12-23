@@ -6,6 +6,7 @@ import scipy.io
 import numpy as np
 import combat
 import csv
+from local_ancillary import (add_site_covariates)
 
 def list_recursive(d, key):
     for k, v in d.items():
@@ -23,71 +24,32 @@ def csv_parser(file_url):
             if line_count == 0:
                 line_count += 1
             else:
-                url = row[0]
+                data_url = row[0]
                 index = int(row[1])
+                covar_url= row[2]
                 line_count += 1
-    return  url, index
+    return  data_url, index, covar_url
 
 def local_0(args):
     input_list = args["input"]
-    #index = input_list["index"]
     datapath = args["state"]["baseDirectory"] + "/" +  input_list["data"]
-    url = args["input"]["file_url"]
-    index = args["input"]["index"]
-    # url, index = csv_parser(datapath)
-    urls = args["state"]["baseDirectory"] + "/" +  url
-    info = combat.send_sample_infomation(urls, index)
-    output_dict = {"computation_phase": "local_0",  "value": info}
-    cache_dict = {"url": urls, "location": index}
+    data_url, index, covar_url = csv_parser(datapath)
+    data_urls = args["state"]["baseDirectory"] + "/" +  data_url
+    covar_urls = args["state"]["baseDirectory"] + "/" +  covar_url
+    output_dict = {"computation_phase": "local_0"}
+    cache_dict = {"data_urls": data_urls, "location": index, "covar_urls": covar_urls}
     computation_output = {"output": output_dict, "cache": cache_dict}
     return json.dumps(computation_output)
 
 def local_1(args):
-    agg_value = args["input"]["total_sample"]
-    urls =  args["cache"]["url"]
-    location = args["cache"]["location"]
-    site_number = args["input"]["total_site"]
-    _info_dict = {
-    'n_batch': site_number - 1,
-    'n_sample': agg_value
-    }
-    local_grand_mean, var_pooled = combat.local_grand_mean_with_betas(urls, _info_dict, 'batch',location)
-    output_dict = {
-        "computation_phase": "local_1",
-        "local_grand_mean": local_grand_mean.tolist(),
-        "var_pooled": var_pooled.tolist(),
-        "s_mean": np.shape(local_grand_mean),
-        "s_var": np.shape(var_pooled)
-    }
+    covar_url =  args["cache"]["covar_urls"]
+    mat = scipy.io.loadmat(covar_url)
+    X = mat['mod']
+    augmented_X = add_site_covariates(args, X)
+    raise Exception(augmented_X)
+
     
-    computation_output = {"output": output_dict }
-    return json.dumps(computation_output)   
 
-def local_2(args):
-    agg_value = args["input"]["total_sample"]
-    urls =  args["cache"]["url"]
-    location = args["cache"]["location"]
-    site_number = args["input"]["total_site"]
-    _info_dict = {
-    'n_batch': site_number - 1,
-    'n_sample': agg_value
-    }
-    _grand_mean = np.array(args["input"]["grand_mean"])
-    _var_pooled = np.array(args["input"]["grand_variance"])
-    info = combat.adjust_data(urls, _grand_mean, _var_pooled, _info_dict, 'batch', location)
-    harmonized_data = np.transpose(info['data'])
-    output_url = args["state"]["outputDirectory"] + "/"
-    np.savetxt(output_url + 'harmonized_site_'+ str(location) +'_data.csv', harmonized_data, delimiter=',')
-    np.savetxt(output_url + 'transposed_harmonized_site_'+ str(location) +'_data.csv', info['data'], delimiter=',')
-
-    output_dict = {
-        "computation_phase": "local_2",
-        "a_prior": info['estimates']['a_prior'], 
-        "b_prior": info['estimates']['b_prior'] , 
-        "t2": info['estimates']['t2'].tolist()
-    }
-    computation_output = {"output": output_dict }
-    return json.dumps(computation_output)     
  
 if __name__ == '__main__':
 
@@ -99,9 +61,6 @@ if __name__ == '__main__':
         sys.stdout.write(computation_output)
     elif "remote_0" in phase_key:
         computation_output = local_1(parsed_args)
-        sys.stdout.write(computation_output)
-    elif "remote_1" in phase_key:
-        computation_output = local_2(parsed_args)
         sys.stdout.write(computation_output)
     else:
         raise ValueError("Error occurred at Local")
