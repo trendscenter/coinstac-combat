@@ -55,6 +55,7 @@ def local_1(args):
     
     augmented_X = add_site_covariates(args, X)
     biased_X = augmented_X.values
+    # raise Exception(biased_X)
     XtransposeX_local = np.matmul(np.matrix.transpose(biased_X), biased_X)
     Xtransposey_local = np.matmul(np.matrix.transpose(biased_X), Y)
     output_dict = {
@@ -66,6 +67,7 @@ def local_1(args):
     }
     cache_dict = {
         "covariates": augmented_X.to_json(orient='split'),
+        "local_sample_count": sample_count
     }
     computation_output = {"output": output_dict, "cache": cache_dict}
 
@@ -76,16 +78,16 @@ def local_2(args):
     input_list = args["input"]
     cache_list = args["cache"]
     beta_matrix = np.array(input_list["avg_beta_vector"])
-    cache_dict = {"beta_matrix": beta_matrix }
+    raise Exception(input_list.keys())
     output_dict = {
 
        "computation_phase": "local_2" 
     }
 
     computation_output = {"output": output_dict, "cache": cache_dict}
-
+   
     return json.dumps(computation_output)
-    raise Exception(beta_matrix.shape)
+    
  
 if __name__ == '__main__':
 
