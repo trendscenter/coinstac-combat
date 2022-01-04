@@ -18,3 +18,12 @@ def standarize_data(beta_matrix,input_list, cache_list):
     raise Exception(grand_mean)
 
 
+0.02709778
+0.02392642
+
+0.25852891
+0.18486775
+
+
+-0.0339992 
+-0.02653037
