@@ -223,12 +223,8 @@ def local_3(args):
     # raise Exception(data.shape, local_stand_mean.shape, mod_mean.shape, var_pooled.shape)
     # raise Exception(s_data.shape, s_data[0])
 
-    cache_dict = {
-        "s_data": s_data.tolist()
-    }
-    output_dict = {
-       "computation_phase": "local_3" 
-    }
+
+   
     # combat.fit_LS_model_and_find_priors(input_list,cache_list)
     # ComBat section starts
 
@@ -259,15 +255,16 @@ def local_3(args):
 
     bayesdata = adjust_data_final(s_data, batch_design, gamma_star, delta_star, local_stand_mean, mod_mean, var_pooled,  data, local_n_sample)
 
-
-
-
-
-    raise Exception(  a_prior,b_prior, cache_list["data_urls"])
+    harmonized_data = np.transpose(bayesdata)
+    output_url = args["state"]["outputDirectory"] + "/"
+    np.savetxt(output_url + 'harmonized_site_'+ str(site_index) +'_data.csv', harmonized_data, delimiter=',') 
 
     # #######   comBat ends  ###############################
-    computation_output = {"output": output_dict, "cache": cache_dict}
-   
+    output_dict = {
+       "message": "Data Harmonization complete", 
+       "computation_phase": "local_3" 
+    }
+    computation_output = {"output": output_dict}
     return json.dumps(computation_output)    
 
 if __name__ == '__main__':

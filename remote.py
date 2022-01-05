@@ -3,6 +3,7 @@
 import sys
 import json
 import numpy as np
+from numpy.core.numeric import argwhere
 import scipy.io as sp
 import combat
 
@@ -96,6 +97,12 @@ def remote_2(args):
     computation_output = {"output": output_dict}
     return json.dumps(computation_output)
 
+def remote_3(args):
+    output_dict = {"status": "Complete"}
+   
+    computation_output = { "output": output_dict, "success": True} 
+    
+    return json.dumps(computation_output) 
 
 if __name__ == '__main__':
     parsed_args = json.loads(sys.stdin.read())
@@ -109,5 +116,8 @@ if __name__ == '__main__':
     elif  "local_2" in phase_key:
          computation_output = remote_2(parsed_args)
          sys.stdout.write(computation_output)        
+    elif  "local_3" in phase_key:
+        computation_output = remote_3(parsed_args)
+        sys.stdout.write(computation_output)
     else:
         raise ValueError("Error occurred at Remote")
