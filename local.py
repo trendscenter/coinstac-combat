@@ -4,11 +4,74 @@ import sys
 import json
 import scipy.io
 import numpy as np
+import numpy.linalg as la
 import combat
 import csv
 import pandas as pd
 from local_ancillary import (add_site_covariates)
 import copy
+import math
+
+
+def convert_zeroes(x):
+    x[x==0] = 1
+    return x
+def aprior(delta_hat):
+    m = np.mean(delta_hat)
+    s2 = np.var(delta_hat,ddof=1)
+    return (2 * s2 +m**2) / float(s2)
+
+def bprior(delta_hat):
+    m = delta_hat.mean()
+    s2 = np.var(delta_hat,ddof=1)
+    return (m*s2+m**3)/s2
+
+def postmean(g_hat, g_bar, n, d_star, t2):
+    return (t2*n*g_hat+d_star * g_bar) / (t2*n+d_star)
+
+def postvar(sum2, n, a, b):
+    return (0.5 * sum2 + b) / (n / 2.0 + a - 1.0)
+
+def convert_zeroes(x):
+    x[x==0] = 1
+    return x
+
+def int_eprior(sdat, g_hat, d_hat):
+    r = sdat.shape[0]
+    gamma_star, delta_star = [], []
+    for i in range(0,r,1):
+        g = np.delete(g_hat,i)
+        d = np.delete(d_hat,i)
+        x = sdat[i,:]
+        n = x.shape[0]
+        j = np.repeat(1,n)
+        A = np.repeat(x, g.shape[0])
+        A = A.reshape(n,g.shape[0])
+        A = np.transpose(A)
+        B = np.repeat(g, n)
+        B = B.reshape(g.shape[0],n)
+        resid2 = np.square(A-B)
+        sum2 = resid2.dot(j)
+        LH = 1/(2*math.pi*d)**(n/2)*np.exp(-sum2/(2*d))
+        LH = np.nan_to_num(LH)
+        gamma_star.append(sum(g*LH)/sum(LH))
+        delta_star.append(sum(d*LH)/sum(LH))
+    adjust = (gamma_star, delta_star)
+    return adjust
+
+
+def find_non_parametric_adjustments(s_data, LS):
+    gamma_star, delta_star = [], []
+    temp = int_eprior(s_data, LS['gamma_hat'], LS['delta_hat'])
+    gamma_star.append(temp[0])
+    delta_star.append(temp[1])
+    gamma_star = np.array(gamma_star)
+    delta_star = np.array(delta_star)
+    # raise Exception(gamma_star.shape, delta_star.shape)
+    return gamma_star, delta_star
+
+
+
 
 def list_recursive(d, key):
     for k, v in d.items():
@@ -104,7 +167,8 @@ def local_2(args):
     cache_dict = {
         "mod_mean": mod_mean.tolist(),
         "stand_mean": stand_mean.tolist(),
-        "site_array": site_array
+        "site_array": site_array,
+        "n_batch": n_batch
 
     }
     output_dict = {
@@ -118,8 +182,10 @@ def local_2(args):
     
  
 def local_3(args):
+    
     input_list = args["input"]
     cache_list = args["cache"]
+    
     var_pooled = np.array(input_list["global_var_pooled"])
     mat_Y = scipy.io.loadmat(cache_list["data_urls"])
     data = mat_Y['data'].T
@@ -147,7 +213,42 @@ def local_3(args):
     output_dict = {
        "computation_phase": "local_3" 
     }
+    # combat.fit_LS_model_and_find_priors(input_list,cache_list)
+    # ComBat section starts
 
+
+    covar = pd.read_json(cache_list["covariates"], orient='split')
+    design = covar.values
+    n_batch = cache_list["n_batch"]
+    # batch_design = design[:,-1:]
+    batch_design = np.array([[1]*local_n_sample]).T
+    # raise Exception(batch_design.shape)
+    gamma_hat = np.dot(np.dot(la.inv(np.dot(batch_design.T, batch_design)), batch_design.T), s_data.T)
+    delta_hat = []
+    delta_hat.append(np.var(s_data,axis=1,ddof=1))
+    delta_hat = list(map(convert_zeroes,delta_hat))
+    gamma_bar = np.mean(gamma_hat, axis=1)
+    t2 = np.var(gamma_hat,axis=1, ddof=1)
+
+    a_prior = list(map(aprior, delta_hat))
+    b_prior = list(map(bprior, delta_hat))
+    LS_dict = {}
+    LS_dict['gamma_hat'] = gamma_hat
+    LS_dict['delta_hat'] = delta_hat
+    LS_dict['gamma_bar'] = gamma_bar
+    LS_dict['t2'] = t2
+    LS_dict['a_prior'] = a_prior
+    LS_dict['b_prior'] = b_prior
+    gamma_star, delta_star = find_non_parametric_adjustments(s_data, LS_dict)
+
+
+
+
+
+
+    raise Exception(  a_prior,b_prior, cache_list["data_urls"])
+
+    # #######   comBat ends  ###############################
     computation_output = {"output": output_dict, "cache": cache_dict}
    
     return json.dumps(computation_output)    
