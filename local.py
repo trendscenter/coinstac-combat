@@ -71,6 +71,22 @@ def find_non_parametric_adjustments(s_data, LS):
     return gamma_star, delta_star
 
 
+def adjust_data_final(s_data, batch_design, gamma_star, delta_star, stand_mean, mod_mean, var_pooled, dat, local_n_sample):
+    bayesdata = s_data
+    gamma_star = np.array(gamma_star)
+    delta_star = np.array(delta_star)
+    dsq = np.sqrt(delta_star)
+    # dsq = dsq.reshape((len(dsq), 1))
+    denom = np.dot(dsq.T, np.ones((1, local_n_sample)))
+    numer = np.array(bayesdata  - np.dot(batch_design, gamma_star).T)
+    bayesdata = numer / denom
+    vpsq = np.sqrt(var_pooled).reshape((len(var_pooled), 1))
+
+    bayesdata = bayesdata * np.dot(vpsq, np.ones((1, local_n_sample))) + stand_mean + mod_mean
+    return bayesdata
+
+
+
 
 
 def list_recursive(d, key):
@@ -241,6 +257,7 @@ def local_3(args):
     LS_dict['b_prior'] = b_prior
     gamma_star, delta_star = find_non_parametric_adjustments(s_data, LS_dict)
 
+    bayesdata = adjust_data_final(s_data, batch_design, gamma_star, delta_star, local_stand_mean, mod_mean, var_pooled,  data, local_n_sample)
 
 
 
