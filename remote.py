@@ -18,8 +18,9 @@ def list_recursive(d, key):
 def remote_0(args):
     input_list = args["input"]
     site_ids = list(input_list.keys())
+    
     site_covar_list = [
-        '{}_{}'.format('site', label) for index, label in enumerate(site_ids)    
+        '{}_{}'.format('site', label) for index, label in enumerate(sorted(site_ids))    
     ]
 
     output_dict = {
@@ -36,10 +37,12 @@ def remote_0(args):
 def remote_1(args):
     input_list = (args["input"])
     
-    beta_vector_0 = [ np.array(input_list[site]["XtransposeX_local"]) for site in input_list]
+    
+    beta_vector_0 = [ np.array(input_list[site]["XtransposeX_local"]) for site in sorted(input_list.keys())]
+    
     beta_vector_1 = sum(beta_vector_0)
     
-    all_lambdas = [input_list[site]["lambda_value"] for site in input_list]
+    all_lambdas = [input_list[site]["lambda_value"] for site in sorted(input_list.keys())]
     if np.unique(all_lambdas).shape[0] != 1:
         raise Exception("Unequal lambdas at local sites")
     
@@ -55,7 +58,7 @@ def remote_1(args):
     
     n_batch =  len(input_list)
     
-    sample_per_batch = np.array([ input_list[site]["local_sample_count"] for site in input_list])
+    sample_per_batch = np.array([ input_list[site]["local_sample_count"] for site in sorted(input_list.keys())])
 
     n_sample = sum(input_list[site]["local_sample_count"] for site in input_list)
     
@@ -88,7 +91,7 @@ def remote_1(args):
 
 def remote_2(args):
     input_list = args["input"]
-    var_pooled = [ np.array(input_list[site]["local_var_pooled"]) for site in (input_list)]
+    var_pooled = [ np.array(input_list[site]["local_var_pooled"]) for site in sorted(input_list.keys())]
     global_var_pooled= sum(var_pooled)
     output_dict = {
         "global_var_pooled": global_var_pooled.tolist(),

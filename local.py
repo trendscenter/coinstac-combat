@@ -83,6 +83,7 @@ def adjust_data_final(s_data, batch_design, gamma_star, delta_star, stand_mean, 
     vpsq = np.sqrt(var_pooled).reshape((len(var_pooled), 1))
 
     bayesdata = bayesdata * np.dot(vpsq, np.ones((1, local_n_sample))) + stand_mean + mod_mean
+    # raise Exception(bayesdata[0], vpsq, mod_mean[0], stand_mean[0], local_n_sample)
     return bayesdata
 
 
@@ -256,9 +257,10 @@ def local_3(args):
     bayesdata = adjust_data_final(s_data, batch_design, gamma_star, delta_star, local_stand_mean, mod_mean, var_pooled,  data, local_n_sample)
 
     harmonized_data = np.transpose(bayesdata)
+    
     output_url = args["state"]["outputDirectory"] + "/"
-    np.savetxt(output_url + 'harmonized_site_'+ str(site_index) +'_data.csv', harmonized_data, delimiter=',') 
-
+    scipy.io.savemat(output_url + 'transposed_harmonized_site_'+ str(site_index) +'_data.mat', {'data': bayesdata}) 
+    scipy.io.savemat(output_url + 'harmonized_site_'+ str(site_index) +'_data.mat', {'data': harmonized_data}) 
     # #######   comBat ends  ###############################
     output_dict = {
        "message": "Data Harmonization complete", 
