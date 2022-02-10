@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from logging import raiseExceptions
 import sys
 import json
 import scipy.io
@@ -109,17 +110,37 @@ def csv_parser(file_url):
                 site_index = row[3]
                 line_count += 1
     return  data_url, lambda_value, covar_url, site_index
+
 ######## Helper Functions sections ends  #######
+
 def local_0(args):
     input_list = args["input"]
-    datapath = args["state"]["baseDirectory"] + "/" +  input_list["data"]
-    data_url, lambda_value, covar_url, site_index = csv_parser(datapath)
+    data_object = input_list["data"]
+    if(type(data_object) == dict):
+        data_object_keys_list = list(data_object.keys())
+        main_key = data_object_keys_list[0]
+        lambda_value = data_object[main_key]["lambda_value"]
+        covar_url = data_object[main_key]["covar_info"]
+        site_index = data_object[main_key]["site_index"]
+        data_url = main_key
+    elif(type(data_object) == str):
+        datapath = args["state"]["baseDirectory"] + "/" +  input_list["data"]
+        data_url, lambda_value, covar_url, site_index = csv_parser(datapath)
+    else:
+        raiseExceptions("Invalid Inputs Found !!")
+
     data_urls = args["state"]["baseDirectory"] + "/" +  data_url
     covar_urls = args["state"]["baseDirectory"] + "/" +  covar_url
     output_dict = {"computation_phase": "local_0"}
     cache_dict = {"data_urls": data_urls, "lambda_value": lambda_value, "covar_urls": covar_urls, "site_index": site_index}
     computation_output = {"output": output_dict, "cache": cache_dict}
     return json.dumps(computation_output)
+
+
+
+
+
+
 
 def local_1(args):
     
