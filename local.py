@@ -12,10 +12,12 @@ from local_ancillary import (add_site_covariates)
 import copy
 import math
 
+######## Helper Functions sections starts #######
 
 def convert_zeroes(x):
     x[x==0] = 1
     return x
+
 def aprior(delta_hat):
     m = np.mean(delta_hat)
     s2 = np.var(delta_hat,ddof=1)
@@ -83,12 +85,7 @@ def adjust_data_final(s_data, batch_design, gamma_star, delta_star, stand_mean, 
     vpsq = np.sqrt(var_pooled).reshape((len(var_pooled), 1))
 
     bayesdata = bayesdata * np.dot(vpsq, np.ones((1, local_n_sample))) + stand_mean + mod_mean
-    # raise Exception(bayesdata[0], vpsq, mod_mean[0], stand_mean[0], local_n_sample)
     return bayesdata
-
-
-
-
 
 def list_recursive(d, key):
     for k, v in d.items():
@@ -112,7 +109,7 @@ def csv_parser(file_url):
                 site_index = row[3]
                 line_count += 1
     return  data_url, lambda_value, covar_url, site_index
-
+######## Helper Functions sections ends  #######
 def local_0(args):
     input_list = args["input"]
     datapath = args["state"]["baseDirectory"] + "/" +  input_list["data"]
@@ -125,7 +122,7 @@ def local_0(args):
     return json.dumps(computation_output)
 
 def local_1(args):
-    # raise Exception( args["cache"])
+    
     covar_url =  args["cache"]["covar_urls"]
     data_url = args["cache"]["data_urls"]
     lambda_value = args["cache"]["lambda_value"]
@@ -139,7 +136,7 @@ def local_1(args):
     
     augmented_X = add_site_covariates(args, X)
     biased_X = augmented_X.values
-    # raise Exception(biased_X)
+    
     XtransposeX_local = np.matmul(np.matrix.transpose(biased_X), biased_X)
     Xtransposey_local = np.matmul(np.matrix.transpose(biased_X), Y)
     output_dict = {
@@ -179,7 +176,6 @@ def local_2(args):
         tmp[:,range(-n_batch,0)] = 0
         mod_mean = np.transpose(np.dot(tmp, B_hat))    
 
-    # raise Exception(mod_mean.shape)
 
     cache_dict = {
         "mod_mean": mod_mean.tolist(),
@@ -207,35 +203,19 @@ def local_3(args):
     mat_Y = scipy.io.loadmat(cache_list["data_urls"])
     data = mat_Y['data'].T
     stand_mean = np.array(cache_list["stand_mean"]).T
-    # raise Exception(stand_mean[169], stand_mean.shape)
     mod_mean = np.array(cache_list["mod_mean"])
     local_n_sample = cache_list["local_sample_count"]
 
     site_index = cache_list["site_index"]
     site_array = cache_list["site_array"]
-    # raise Exception(site_index, site_array)
     indices = [index for index, element in enumerate(site_array) if element == int(site_index)]
-    # raise Exception(stand_mean[96,0], stand_mean.shape)
     filtered_mean = stand_mean[indices]
-    # raise Exception(filtered_mean, filtered_mean.shape)
     local_stand_mean = filtered_mean.T
     s_data = ((data - local_stand_mean - mod_mean) / np.dot(np.sqrt(var_pooled), np.ones((1, local_n_sample))))
-    # raise Exception(data[0], cache_list["data_urls"], data.shape, local_stand_mean.shape, local_stand_mean[0])
-    # raise Exception(data.shape, local_stand_mean.shape, mod_mean.shape, var_pooled.shape)
-    # raise Exception(s_data.shape, s_data[0])
-
-
-   
-    # combat.fit_LS_model_and_find_priors(input_list,cache_list)
-    # ComBat section starts
-
-
     covar = pd.read_json(cache_list["covariates"], orient='split')
     design = covar.values
     n_batch = cache_list["n_batch"]
-    # batch_design = design[:,-1:]
     batch_design = np.array([[1]*local_n_sample]).T
-    # raise Exception(batch_design.shape)
     gamma_hat = np.dot(np.dot(la.inv(np.dot(batch_design.T, batch_design)), batch_design.T), s_data.T)
     delta_hat = []
     delta_hat.append(np.var(s_data,axis=1,ddof=1))
@@ -253,15 +233,11 @@ def local_3(args):
     LS_dict['a_prior'] = a_prior
     LS_dict['b_prior'] = b_prior
     gamma_star, delta_star = find_non_parametric_adjustments(s_data, LS_dict)
-
     bayesdata = adjust_data_final(s_data, batch_design, gamma_star, delta_star, local_stand_mean, mod_mean, var_pooled,  data, local_n_sample)
-
     harmonized_data = np.transpose(bayesdata)
-    
     output_url = args["state"]["outputDirectory"] + "/"
     scipy.io.savemat(output_url + 'transposed_harmonized_site_'+ str(site_index) +'_data.mat', {'data': bayesdata}) 
     scipy.io.savemat(output_url + 'harmonized_site_'+ str(site_index) +'_data.mat', {'data': harmonized_data}) 
-    # #######   comBat ends  ###############################
     output_dict = {
        "message": "Data Harmonization complete", 
        "computation_phase": "local_3" 
