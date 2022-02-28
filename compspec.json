@@ -8,14 +8,14 @@
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstac-combatdc",
+    "dockerImage": "coinstacteam/coinstac-combatdc",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstac-combatdc",
+      "dockerImage": "coinstacteam/coinstac-combatdc",
       "command": [
         "python",
         "\/computation\/remote.py"
