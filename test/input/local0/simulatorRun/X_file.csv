@@ -1,2 +1,2 @@
-﻿data_url,lambda_value,covar_info, site_index
-"nm_data.mat",0,"nm_covar.mat", 1
+﻿data_url,covar_info, site_index
+nm_data.csv,nm_covar.csv,1
