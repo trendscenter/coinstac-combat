@@ -3,7 +3,7 @@
 from logging import raiseExceptions
 import sys
 import json
-import scipy.io
+# import scipy.io
 import numpy as np
 import numpy.linalg as la
 import combat
@@ -107,9 +107,9 @@ def csv_parser(file_url):
                 line_count += 1
             else:
                 data_url = row[0]
-                lambda_value = int(row[1])
-                covar_url= row[2]
-                site_index = row[3]
+                lambda_value = 0
+                covar_url= row[1]
+                site_index = row[2]
                 line_count += 1
     return  data_url, lambda_value, covar_url, site_index
 
@@ -163,12 +163,16 @@ def local_1(args):
     covar_url =  args["cache"]["covar_urls"]
     data_url = args["cache"]["data_urls"]
     lambda_value = args["cache"]["lambda_value"]
-    mat_X = scipy.io.loadmat(covar_url)
-    mat_Y = scipy.io.loadmat(data_url)
+    # mat_X = scipy.io.loadmat(covar_url)
+    # mat_Y = scipy.io.loadmat(data_url)
+    mat_X = np.loadtxt(covar_url, delimiter=',')
+    mat_Y = np.loadtxt(data_url, delimiter=',')
 
     site_index = args["cache"]["site_index"]
-    X = mat_X['mod']
-    Y = mat_Y['data']
+    # X = mat_X['mod']
+    # Y = mat_Y['data']
+    X = mat_X
+    Y = mat_Y
     sample_count = len(Y)
 
     augmented_X = add_site_covariates(args, X)
@@ -197,8 +201,10 @@ def local_2(args):
     input_list = args["input"]
     cache_list = args["cache"]
     covar = pd.read_json(cache_list["covariates"], orient='split')
-    mat_Y = scipy.io.loadmat(cache_list["data_urls"])
-    data = mat_Y['data'].T
+    # mat_Y = scipy.io.loadmat(cache_list["data_urls"])
+    # data = mat_Y['data'].T
+    mat_Y = mat_Y = np.loadtxt(cache_list["data_urls"], delimiter=',')
+    data = mat_Y.T
     design = covar.values
     B_hat = np.array(input_list["B_hat"])
     n_sample = input_list["n_sample"]
@@ -237,8 +243,10 @@ def local_3(args):
     cache_list = args["cache"]
 
     var_pooled = np.array(input_list["global_var_pooled"])
-    mat_Y = scipy.io.loadmat(cache_list["data_urls"])
-    data = mat_Y['data'].T
+    # mat_Y = scipy.io.loadmat(cache_list["data_urls"])
+    # data = mat_Y['data'].T
+    mat_Y = mat_Y = np.loadtxt(cache_list["data_urls"], delimiter=',')
+    data = mat_Y.T
     stand_mean = np.array(cache_list["stand_mean"]).T
     mod_mean = np.array(cache_list["mod_mean"])
     local_n_sample = cache_list["local_sample_count"]
@@ -273,8 +281,10 @@ def local_3(args):
     bayesdata = adjust_data_final(s_data, batch_design, gamma_star, delta_star, local_stand_mean, mod_mean, var_pooled,  data, local_n_sample)
     harmonized_data = np.transpose(bayesdata)
     output_url = args["state"]["outputDirectory"] + "/"
-    scipy.io.savemat(output_url + 'transposed_harmonized_site_'+ str(site_index) +'_data.mat', {'data': bayesdata})
-    scipy.io.savemat(output_url + 'harmonized_site_'+ str(site_index) +'_data.mat', {'data': harmonized_data})
+    # scipy.io.savemat(output_url + 'transposed_harmonized_site_'+ str(site_index) +'_data.mat', {'data': bayesdata})
+    # scipy.io.savemat(output_url + 'harmonized_site_'+ str(site_index) +'_data.mat', {'data': harmonized_data})
+
+    np.savetxt(output_url + 'harmonized_site_'+ str(site_index) +'_data.csv', harmonized_data, delimiter=',')
     output_dict = {
        "message": "Data Harmonization complete",
        "computation_phase": "local_3"

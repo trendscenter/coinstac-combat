@@ -4,7 +4,6 @@ import sys
 import json
 import numpy as np
 from numpy.core.numeric import argwhere
-import scipy.io as sp
 import combat
 
 def list_recursive(d, key):

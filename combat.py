@@ -4,7 +4,7 @@ import pandas as pd
 import numpy.linalg as la
 import math
 import copy
-import scipy.io
+
 
 def fit_LS_model_and_find_priors(input_list,cache_list):
     raise Exception(input_list.keys(), cache_list.keys())
