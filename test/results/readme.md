@@ -10,4 +10,4 @@ The results can be downloaded as a csv file from COINSTAC UI: [View file](https:
 
 Here is a screenshot of the generate results page: 
 
-![Results View](https://github.com/trendscenter/coinstac-combat/tree/ridge-combat/test/results.png "Results View")
+![Results View](https://raw.githubusercontent.com/trendscenter/coinstac-combat/ridge-combat/test/results/results.png?token=GHSAT0AAAAAABXRZMBUG5VCG5X7URPQXTFQY2RW4CQ "Results View")
