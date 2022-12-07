@@ -3,7 +3,7 @@
 from logging import raiseExceptions
 import sys
 import json
-# import scipy.io
+import scipy.io
 import numpy as np
 import numpy.linalg as la
 import combat
@@ -124,24 +124,26 @@ def folders_in(path_to_parent):
 def local_0(args):
     input_list = args["input"]
     data_object = input_list["data"]
-    # if(type(data_object) == dict):
-    #     data_object_keys_list = list(data_object.keys())
-    #     main_key = data_object_keys_list[0]
-    #     lambda_value = data_object[main_key]["lambda_value"]
-    #     covar_url = data_object[main_key]["covar_info"]
-    #     site_index = data_object[main_key]["site_index"]
-    #     data_url = main_key
-    # elif(type(data_object) == str):
-    if(data_object):
-        subdir = list(folders_in(args["state"]["baseDirectory"]))
-        if subdir and len(subdir) > 0:
-            dir = os.path.join(args["state"]["baseDirectory"],subdir[0])
-        else:
-            dir = args["state"]["baseDirectory"]
-        path = dir+ "/*.csv"
-        files = glob.glob(path)
-        csv_file = files[0]
-        data_url, lambda_value, covar_url, site_index = csv_parser(csv_file)
+    if(type(data_object) == dict):
+        data_object_keys_list = list(data_object.keys())
+        main_key = data_object_keys_list[0]
+        lambda_value = data_object[main_key]["lambda_value"]
+        covar_url = data_object[main_key]["covar_info"]
+        site_index = data_object[main_key]["site_index"]
+        data_url = main_key
+    elif(type(data_object) == str):
+        if(data_object):
+            subdir = list(folders_in(args["state"]["baseDirectory"]))
+            if subdir and len(subdir) > 0:
+                dir = os.path.join(args["state"]["baseDirectory"],subdir[0])
+            else:
+                dir = args["state"]["baseDirectory"]
+            path = dir+ "/*.csv"
+            files = glob.glob(path)
+            csv_file = files[-1]
+            
+            data_url, lambda_value, covar_url, site_index = csv_parser(csv_file)
+            
     else:
         raiseExceptions("Invalid Inputs Found !!")
 
