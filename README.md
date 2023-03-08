@@ -9,3 +9,13 @@ Steps
 3) cd coinstac-combat
 4) docker build -t coinstac/combat .
 5) coinstac-simulator
+
+
+
+
+
+# Acknowledgement:
+
+Jean-Philippe Fortin for the sharing the cetralized version of the code. 
+
+
