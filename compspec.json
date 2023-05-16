@@ -1,43 +1,58 @@
 {
-  "meta": {
-    "name": "Decentralized Combat",
-    "id": "coinstac-combatdc",
-    "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/trendscenter\/combat-dc",
-    "description": "Decentralized Combat Test"
-  },
-  "computation": {
-    "type": "docker",
-    "dockerImage": "coinstacteam/coinstac-combatdc",
-    "command": [
-      "python",
-      "\/computation\/local.py"
-    ],
-    "remote": {
-      "type": "docker",
-      "dockerImage": "coinstacteam/coinstac-combatdc",
-      "command": [
-        "python",
-        "\/computation\/remote.py"
-      ]
+    "meta": {
+        "name": "Decentralized Combat",
+        "id": "coinstac-combatdc",
+        "version": "v1.0.0",
+        "compspecVersion": null,
+        "repository": "https://github.com/trendscenter/coinstac-combat",
+        "description": "Decentralized Combat Test"
     },
-   "input": {
-      "data": {
-        "label": "responses",
-        "type": "files",
-        "items": ["csv"],
-        "extensions": "csv"
-      }
-
-    },
-    "output": {
-      "hyperparameters": {
-        "type": "array",
-        "label": "Decentralized hypermeters"
-      }
-    },
-    "display": {
-      "type": "table"
+    "computation": {
+        "display": {
+            "type": "table"
+        },
+        "input": {
+            "data": {
+                "label": "Data",
+                "type": "files",
+                "items": [
+                    "Files"
+                ],
+                "extensions": [
+                    [
+                        "csv"
+                    ]
+                ],
+                "order": 0,
+                "source": "member"
+            },
+            "hidden": {
+                "label": " ",
+                "type": "hidden",
+                "source": "owner",
+                "default": " ",
+                "order": 1
+            }
+        },
+        "output": {
+            "hyperparameters": {
+                "type": "array",
+                "label": "Decentralized hypermeters"
+            }
+        },
+        "type": "docker",
+        "dockerImage": "coinstacteam/coinstac-combatdc",
+        "command": [
+            "python",
+            "/computation/local.py"
+        ],
+        "remote": {
+            "type": "docker",
+            "dockerImage": "coinstacteam/coinstac-combatdc",
+            "command": [
+                "python",
+                "/computation/remote.py"
+            ]
+        }
     }
-  }
 }
