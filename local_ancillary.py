@@ -158,14 +158,13 @@ def local_stats_to_dict_fsl(X, y):
     return beta_vector, local_stats_list, meanY_vector, lenY_vector
 
 
-def add_site_covariates(args, X):
+def add_site_covariates(args, X, sample_count):
     """Add site specific columns to the covariate matrix"""
     # biased_X =pd.DataFrame(X)
     biased_X = X
     site_covar_list = args["input"]["site_covar_list"]
 
-    site_matrix = np.zeros((np.array(X).shape[0], len(site_covar_list)),
-                           dtype=int)
+    site_matrix = np.zeros(( sample_count, len(site_covar_list)), dtype=int)
     site_df = pd.DataFrame(site_matrix, columns=site_covar_list)
 
     select_cols = [
@@ -179,5 +178,4 @@ def add_site_covariates(args, X):
     site_df.reset_index(drop=True, inplace=True)
 
     augmented_X = pd.concat([biased_X, site_df], axis=1)
-
     return augmented_X

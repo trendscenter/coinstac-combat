@@ -146,15 +146,16 @@ def local_1(args):
     covar_url =  args["cache"]["covar_urls"]
     data_url = args["cache"]["data_urls"]
     lambda_value = args["cache"]["lambda_value"]
-    mat_X = pd.read_csv(covar_url)
+    if os.path.getsize(covar_url): 
+        mat_X = pd.read_csv(covar_url)
+    else:
+        mat_X = pd.DataFrame()
     mat_Y = pd.read_csv(data_url)
-    # mat_X = np.loadtxt(covar_url, delimiter=',', skiprows=1)
-    # mat_Y = np.loadtxt(data_url, delimiter=',')
     site_index = args["cache"]["site_index"]
     X = mat_X
     Y = mat_Y.values
     sample_count = len(Y)
-    augmented_X = add_site_covariates(args, X)
+    augmented_X = add_site_covariates(args, X, sample_count)
     biased_X = augmented_X.values
 
     XtransposeX_local = np.matmul(np.matrix.transpose(biased_X), biased_X)
