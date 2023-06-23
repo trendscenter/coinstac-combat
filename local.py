@@ -140,7 +140,6 @@ def local_0(args):
     output_dict = {"computation_phase": "local_0"}
     cache_dict = {"data_urls": data_urls, "covar_urls": covar_urls, "site_index": site_index, "lambda_value": 0}
     computation_output = {"output": output_dict, "cache": cache_dict}
-    # raise Exception(computation_output)
     return json.dumps(computation_output)
 
 def local_1(args):
@@ -171,7 +170,9 @@ def local_1(args):
     }
     cache_dict = {
         "covariates": augmented_X.to_json(orient='split'),
-        "local_sample_count": sample_count
+        "local_sample_count": sample_count,
+        "data_urls": data_url,
+        "covar_urls": covar_url
     }
 
     computation_output = {"output": output_dict, "cache": cache_dict}
@@ -182,6 +183,8 @@ def local_2(args):
 
     input_list = args["input"]
     cache_list = args["cache"]
+    covar_url =  args["cache"]["covar_urls"]
+    data_url = args["cache"]["data_urls"]
     covar = pd.read_json(cache_list["covariates"], orient='split')
     # mat_Y = scipy.io.loadmat(cache_list["data_urls"])
     # data = mat_Y['data'].T
@@ -207,7 +210,9 @@ def local_2(args):
         "mod_mean": mod_mean.tolist(),
         "stand_mean": stand_mean.tolist(),
         "site_array": site_array,
-        "n_batch": n_batch
+        "n_batch": n_batch,
+        "data_urls": data_url,
+        "covar_urls": covar_url
 
     }
     output_dict = {
@@ -226,8 +231,6 @@ def local_3(args):
     cache_list = args["cache"]
 
     var_pooled = np.array(input_list["global_var_pooled"])
-    # mat_Y = scipy.io.loadmat(cache_list["data_urls"])
-    # data = mat_Y['data'].T
     mat_Y = pd.read_csv(cache_list["data_urls"])
     data = mat_Y.values.T
     stand_mean = np.array(cache_list["stand_mean"]).T
@@ -264,11 +267,14 @@ def local_3(args):
     bayesdata = adjust_data_final(s_data, batch_design, gamma_star, delta_star, local_stand_mean, mod_mean, var_pooled,  data, local_n_sample)
     harmonized_data = np.transpose(bayesdata)
     output_url = args["state"]["outputDirectory"] + "/"
-    # scipy.io.savemat(output_url + 'transposed_harmonized_site_'+ str(site_index) +'_data.mat', {'data': bayesdata})
-    # scipy.io.savemat(output_url + 'harmonized_site_'+ str(site_index) +'_data.mat', {'data': harmonized_data})
-    df = pd.DataFrame(harmonized_data)
+    
+    covar_url =  args["cache"]["covar_urls"]
+    data_url = args["cache"]["data_urls"]
+    mat_Y_labels = pd.read_csv(data_url).columns
+    
+    df = pd.DataFrame(harmonized_data, columns=mat_Y_labels)
     df.to_csv(output_url + 'harmonized_site_'+ str(site_index) +'_data.csv',  index=False)
-    # np.savetxt(output_url + 'harmonized_site_'+ str(site_index) +'_data.csv', harmonized_data, delimiter=',')
+
     output_dict = {
        "message": "Data Harmonization complete",
        "computation_phase": "local_3"
