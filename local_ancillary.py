@@ -1,16 +1,7 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Apr 11 22:28:11 2018
-
-@author: Harshvardhan
-"""
 import warnings
-
 import numpy as np
 import pandas as pd
 import scipy as sp
-
 import statsmodels.api as sm
 from numba import jit, prange
 
@@ -109,53 +100,6 @@ def ignore_nans(X, y):
     X_ = X_[finite_idx, :]
 
     return X_, y_
-
-
-def local_stats_to_dict_fsl(X, y):
-    """Calculate local statistics"""
-    y_labels = list(y.columns)
-
-    biased_X = sm.add_constant(X)
-    X_labels = list(biased_X.columns)
-
-    local_params = []
-    local_sse = []
-    local_tvalues = []
-    local_rsquared = []
-    meanY_vector, lenY_vector = [], []
-
-    for column in y.columns:
-        curr_y = y[column]
-
-        X_, y_ = ignore_nans(biased_X, curr_y)
-        meanY_vector.append(np.mean(y_))
-        lenY_vector.append(len(y_))
-
-        # Printing local stats as well
-        model = sm.OLS(y_, X_).fit()
-        local_params.append(model.params)
-        local_sse.append(model.ssr)
-        local_tvalues.append(model.tvalues)
-        local_rsquared.append(model.rsquared)
-
-    keys = [
-        "Coefficient", "Sum Square of Errors", "t Stat",
-        "R Squared", "covariate_labels"
-    ]
-    local_stats_list = []
-
-    for index, _ in enumerate(y_labels):
-        values = [
-            local_params[index].tolist(), local_sse[index],
-            local_tvalues[index].tolist(), 
-            local_rsquared[index], X_labels
-        ]
-        local_stats_dict = {key: value for key, value in zip(keys, values)}
-        local_stats_list.append(local_stats_dict)
-
-        beta_vector = [l.tolist() for l in local_params]
-
-    return beta_vector, local_stats_list, meanY_vector, lenY_vector
 
 
 def add_site_covariates(args, X, sample_count):

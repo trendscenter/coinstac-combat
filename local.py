@@ -117,7 +117,6 @@ def local_0(args):
     if(type(data_object) == dict):
         data_object_keys_list = list(data_object.keys())
         main_key = data_object_keys_list[0]
-        lambda_value = data_object[main_key]["lambda_value"]
         covar_url = data_object[main_key]["covar_info"]
         site_index = data_object[main_key]["site_index"]
         data_url = main_key
@@ -146,7 +145,7 @@ def local_1(args):
     covar_url =  args["cache"]["covar_urls"]
     data_url = args["cache"]["data_urls"]
     lambda_value = args["cache"]["lambda_value"]
-    if os.path.getsize(covar_url): 
+    if len(covar_url) > 0 and  os.path.getsize(covar_url): 
         mat_X = pd.read_csv(covar_url)
     else:
         mat_X = pd.DataFrame()
@@ -187,9 +186,6 @@ def local_2(args):
     covar_url =  args["cache"]["covar_urls"]
     data_url = args["cache"]["data_urls"]
     covar = pd.read_json(cache_list["covariates"], orient='split')
-    # mat_Y = scipy.io.loadmat(cache_list["data_urls"])
-    # data = mat_Y['data'].T
-    # mat_Y = mat_Y = np.loadtxt(cache_list["data_urls"], delimiter=',')
     mat_Y =  pd.read_csv(cache_list["data_urls"])
     data = mat_Y.values.T
     design = covar.values
