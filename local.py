@@ -3,7 +3,6 @@
 from logging import raiseExceptions
 import sys
 import json
-# import scipy.io
 import numpy as np
 import numpy.linalg as la
 import combat
@@ -81,7 +80,6 @@ def adjust_data_final(s_data, batch_design, gamma_star, delta_star, stand_mean, 
     gamma_star = np.array(gamma_star)
     delta_star = np.array(delta_star)
     dsq = np.sqrt(delta_star)
-    # dsq = dsq.reshape((len(dsq), 1))
     denom = np.dot(dsq.T, np.ones((1, local_n_sample)))
     numer = np.array(bayesdata  - np.dot(batch_design, gamma_star).T)
     bayesdata = numer / denom
@@ -99,19 +97,11 @@ def list_recursive(d, key):
             yield v
 
 def csv_parser(file_url):
-    with open(file_url, mode='r') as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        line_count = 0
-        for row in csv_reader:
-            if line_count == 0:
-                line_count += 1
-            else:
-                data_url = row[0]
-                lambda_value = 0
-                covar_url= row[1]
-                site_index = row[2]
-                line_count += 1
-    return  data_url, lambda_value, covar_url, site_index
+    dataFrame = pd.read_csv(file_url)
+    data_url = dataFrame["data_url"][0]
+    covar_url = dataFrame["covar_info"][0]
+    site_index  = int(dataFrame["site_index"][0])
+    return  data_url, covar_url, site_index
 
 
 def folders_in(path_to_parent):
@@ -124,62 +114,52 @@ def folders_in(path_to_parent):
 def local_0(args):
     input_list = args["input"]
     data_object = input_list["data"]
-    # if(type(data_object) == dict):
-    #     data_object_keys_list = list(data_object.keys())
-    #     main_key = data_object_keys_list[0]
-    #     lambda_value = data_object[main_key]["lambda_value"]
-    #     covar_url = data_object[main_key]["covar_info"]
-    #     site_index = data_object[main_key]["site_index"]
-    #     data_url = main_key
-    # elif(type(data_object) == str):
-    if(data_object):
-        subdir = list(folders_in(args["state"]["baseDirectory"]))
-        if subdir and len(subdir) > 0:
-            dir = os.path.join(args["state"]["baseDirectory"],subdir[0])
-        else:
-            dir = args["state"]["baseDirectory"]
-        path = dir+ "/*.csv"
-        files = glob.glob(path)
-        csv_file = files[0]
-        data_url, lambda_value, covar_url, site_index = csv_parser(csv_file)
+    if(type(data_object) == dict):
+        data_object_keys_list = list(data_object.keys())
+        main_key = data_object_keys_list[0]
+        covar_url = data_object[main_key]["covar_info"]
+        site_index = data_object[main_key]["site_index"]
+        data_url = main_key
+    elif(type(data_object) == str):
+        if(data_object):
+            subdir = list(folders_in(args["state"]["baseDirectory"]))
+            if subdir and len(subdir) > 0:
+                dir = os.path.join(args["state"]["baseDirectory"],subdir[0])
+            else:
+                dir = args["state"]["baseDirectory"]
+            path = dir+ "/*.csv"
+            files = glob.glob(path)
+            csv_file = [item for (index, item) in enumerate(files) if "X_file" in item][0]
+            data_url, covar_url, site_index = csv_parser(csv_file)
     else:
         raiseExceptions("Invalid Inputs Found !!")
 
     data_urls = dir + "/" +  data_url
     covar_urls = dir + "/" +  covar_url
     output_dict = {"computation_phase": "local_0"}
-    cache_dict = {"data_urls": data_urls, "lambda_value": lambda_value, "covar_urls": covar_urls, "site_index": site_index}
+    cache_dict = {"data_urls": data_urls, "covar_urls": covar_urls, "site_index": site_index, "lambda_value": 0}
     computation_output = {"output": output_dict, "cache": cache_dict}
     return json.dumps(computation_output)
 
-
-
-
-
-
-
 def local_1(args):
-
     covar_url =  args["cache"]["covar_urls"]
     data_url = args["cache"]["data_urls"]
     lambda_value = args["cache"]["lambda_value"]
-    # mat_X = scipy.io.loadmat(covar_url)
-    # mat_Y = scipy.io.loadmat(data_url)
-    mat_X = np.loadtxt(covar_url, delimiter=',')
-    mat_Y = np.loadtxt(data_url, delimiter=',')
-
+    if len(covar_url) > 0 and  os.path.getsize(covar_url): 
+        mat_X = pd.read_csv(covar_url)
+    else:
+        mat_X = pd.DataFrame()
+    mat_Y = pd.read_csv(data_url)
     site_index = args["cache"]["site_index"]
-    # X = mat_X['mod']
-    # Y = mat_Y['data']
     X = mat_X
-    Y = mat_Y
+    Y = mat_Y.values
     sample_count = len(Y)
-
-    augmented_X = add_site_covariates(args, X)
+    augmented_X = add_site_covariates(args, X, sample_count)
     biased_X = augmented_X.values
 
     XtransposeX_local = np.matmul(np.matrix.transpose(biased_X), biased_X)
     Xtransposey_local = np.matmul(np.matrix.transpose(biased_X), Y)
+
     output_dict = {
         "local_sample_count": sample_count,
         "XtransposeX_local": XtransposeX_local.tolist(),
@@ -190,8 +170,11 @@ def local_1(args):
     }
     cache_dict = {
         "covariates": augmented_X.to_json(orient='split'),
-        "local_sample_count": sample_count
+        "local_sample_count": sample_count,
+        "data_urls": data_url,
+        "covar_urls": covar_url
     }
+
     computation_output = {"output": output_dict, "cache": cache_dict}
 
     return json.dumps(computation_output)
@@ -200,11 +183,11 @@ def local_2(args):
 
     input_list = args["input"]
     cache_list = args["cache"]
+    covar_url =  args["cache"]["covar_urls"]
+    data_url = args["cache"]["data_urls"]
     covar = pd.read_json(cache_list["covariates"], orient='split')
-    # mat_Y = scipy.io.loadmat(cache_list["data_urls"])
-    # data = mat_Y['data'].T
-    mat_Y = mat_Y = np.loadtxt(cache_list["data_urls"], delimiter=',')
-    data = mat_Y.T
+    mat_Y =  pd.read_csv(cache_list["data_urls"])
+    data = mat_Y.values.T
     design = covar.values
     B_hat = np.array(input_list["B_hat"])
     n_sample = input_list["n_sample"]
@@ -214,17 +197,19 @@ def local_2(args):
     local_var_pooled = np.dot(((data - np.dot(design, B_hat).T)**2), np.ones((local_n_sample, 1)) / float(n_sample))
     stand_mean = np.array(input_list["stand_mean"])
     mod_mean = 0
+
     if design is not None:
         tmp = copy.deepcopy(design)
         tmp[:,range(-n_batch,0)] = 0
         mod_mean = np.transpose(np.dot(tmp, B_hat))
 
-
     cache_dict = {
         "mod_mean": mod_mean.tolist(),
         "stand_mean": stand_mean.tolist(),
         "site_array": site_array,
-        "n_batch": n_batch
+        "n_batch": n_batch,
+        "data_urls": data_url,
+        "covar_urls": covar_url
 
     }
     output_dict = {
@@ -243,10 +228,8 @@ def local_3(args):
     cache_list = args["cache"]
 
     var_pooled = np.array(input_list["global_var_pooled"])
-    # mat_Y = scipy.io.loadmat(cache_list["data_urls"])
-    # data = mat_Y['data'].T
-    mat_Y = mat_Y = np.loadtxt(cache_list["data_urls"], delimiter=',')
-    data = mat_Y.T
+    mat_Y = pd.read_csv(cache_list["data_urls"])
+    data = mat_Y.values.T
     stand_mean = np.array(cache_list["stand_mean"]).T
     mod_mean = np.array(cache_list["mod_mean"])
     local_n_sample = cache_list["local_sample_count"]
@@ -281,10 +264,14 @@ def local_3(args):
     bayesdata = adjust_data_final(s_data, batch_design, gamma_star, delta_star, local_stand_mean, mod_mean, var_pooled,  data, local_n_sample)
     harmonized_data = np.transpose(bayesdata)
     output_url = args["state"]["outputDirectory"] + "/"
-    # scipy.io.savemat(output_url + 'transposed_harmonized_site_'+ str(site_index) +'_data.mat', {'data': bayesdata})
-    # scipy.io.savemat(output_url + 'harmonized_site_'+ str(site_index) +'_data.mat', {'data': harmonized_data})
+    
+    covar_url =  args["cache"]["covar_urls"]
+    data_url = args["cache"]["data_urls"]
+    mat_Y_labels = pd.read_csv(data_url).columns
+    
+    df = pd.DataFrame(harmonized_data, columns=mat_Y_labels)
+    df.to_csv(output_url + 'harmonized_site_'+ str(site_index) +'_data.csv',  index=False)
 
-    np.savetxt(output_url + 'harmonized_site_'+ str(site_index) +'_data.csv', harmonized_data, delimiter=',')
     output_dict = {
        "message": "Data Harmonization complete",
        "computation_phase": "local_3"
