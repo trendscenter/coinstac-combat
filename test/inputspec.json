@@ -1,14 +1,18 @@
 [
   {
-    "data":{
-      "value": "X_file.csv"
+    "data_file": {
+      "value": "nm_data.csv"
+    },
+    "covariate_file": {
+      "value": "nm_covar.csv"
     }
   },
-
   {
-      "data":{
-        "value": "X_file.csv"
-      }
-  
+    "data_file": {
+      "value": "eu_data.csv"
+    },
+    "covariate_file": {
+      "value": "eu_covar.csv"
     }
+  }
 ]

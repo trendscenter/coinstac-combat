@@ -12,8 +12,22 @@
             "type": "table"
         },
         "input": {
-            "data": {
-                "label": "Data",
+            "data_file": {
+                "label": "Data File",
+                "type": "files",
+                "items": [
+                    "Files"
+                ],
+                "extensions": [
+                    [
+                        "csv"
+                    ]
+                ],
+                "order": 0,
+                "source": "member"
+            },
+            "covariate_file": {
+                "label": "Covariate File",
                 "type": "files",
                 "items": [
                     "Files"

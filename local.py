@@ -100,9 +100,14 @@ def csv_parser(file_url):
     dataFrame = pd.read_csv(file_url)
     data_url = dataFrame["data_url"][0]
     covar_url = dataFrame["covar_info"][0]
-    site_index  = int(dataFrame["site_index"][0])
-    return  data_url, covar_url, site_index
+    return  data_url, covar_url
 
+def parse_clientId(inp_str):
+    num = ""
+    for c in inp_str:
+        if c.isdigit():
+            num = num + c
+    return int(num) + 1
 
 def folders_in(path_to_parent):
     for fname in os.listdir(path_to_parent):
@@ -113,31 +118,29 @@ def folders_in(path_to_parent):
 
 def local_0(args):
     input_list = args["input"]
-    data_object = input_list["data"]
-    if(type(data_object) == dict):
-        data_object_keys_list = list(data_object.keys())
-        main_key = data_object_keys_list[0]
-        covar_url = data_object[main_key]["covar_info"]
-        site_index = data_object[main_key]["site_index"]
-        data_url = main_key
-    elif(type(data_object) == str):
-        if(data_object):
-            subdir = list(folders_in(args["state"]["baseDirectory"]))
-            if subdir and len(subdir) > 0:
-                dir = os.path.join(args["state"]["baseDirectory"],subdir[0])
-            else:
-                dir = args["state"]["baseDirectory"]
-            path = dir+ "/*.csv"
-            files = glob.glob(path)
-            csv_file = [item for (index, item) in enumerate(files) if "X_file" in item][0]
-            data_url, covar_url, site_index = csv_parser(csv_file)
+
+    if(input_list):
+        subdir = list(folders_in(args["state"]["baseDirectory"]))
+        if subdir and len(subdir) > 0:
+            dir = os.path.join(args["state"]["baseDirectory"],subdir[0])
+        else:
+            dir = args["state"]["baseDirectory"]
+        # path = dir+ "/*.csv"
+        # files = glob.glob(path)
+        # csv_file = [item for (index, item) in enumerate(files) if "X_file" in item][0]
+        # data_url, covar_url = csv_parser(csv_file)
     else:
         raiseExceptions("Invalid Inputs Found !!")
 
-    data_urls = dir + "/" +  data_url
-    covar_urls = dir + "/" +  covar_url
+    data_urls = dir + "/" +  input_list["data_file"]
+    
+    if len(input_list["covariate_file"]) > 0 :
+        covar_urls = dir + "/" +  input_list["covariate_file"]
+    else:
+        covar_urls = ''
+
     output_dict = {"computation_phase": "local_0"}
-    cache_dict = {"data_urls": data_urls, "covar_urls": covar_urls, "site_index": site_index, "lambda_value": 0}
+    cache_dict = {"data_urls": data_urls, "covar_urls": covar_urls, "lambda_value": 0}
     computation_output = {"output": output_dict, "cache": cache_dict}
     return json.dumps(computation_output)
 
@@ -145,12 +148,14 @@ def local_1(args):
     covar_url =  args["cache"]["covar_urls"]
     data_url = args["cache"]["data_urls"]
     lambda_value = args["cache"]["lambda_value"]
-    if len(covar_url) > 0 and  os.path.getsize(covar_url): 
+    
+    if len(covar_url) > 0 and os.path.getsize(covar_url) : 
         mat_X = pd.read_csv(covar_url)
     else:
         mat_X = pd.DataFrame()
+    
     mat_Y = pd.read_csv(data_url)
-    site_index = args["cache"]["site_index"]
+    site_index = parse_clientId(args["state"]["clientId"])
     X = mat_X
     Y = mat_Y.values
     sample_count = len(Y)
@@ -172,7 +177,8 @@ def local_1(args):
         "covariates": augmented_X.to_json(orient='split'),
         "local_sample_count": sample_count,
         "data_urls": data_url,
-        "covar_urls": covar_url
+        "covar_urls": covar_url,
+        "site_index": site_index
     }
 
     computation_output = {"output": output_dict, "cache": cache_dict}
